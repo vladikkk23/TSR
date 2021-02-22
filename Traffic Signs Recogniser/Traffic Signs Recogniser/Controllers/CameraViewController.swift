@@ -22,27 +22,18 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     
     private var previewLayer: AVCaptureVideoPreviewLayer! = nil
     
+    var currentRequestIndex = 0
+    // How many predictions we can do concurrently.
+    static let maxRequests = 3
+    
     // Initializing request handler
-    lazy var detectionRequest: VNCoreMLRequest = {
-        // Get model URL
-        let modelURL = Bundle.main.url(forResource: "TSRv3copy", withExtension: "mlmodelc")!
-        
-        // Create desired model
-        let model = try! VNCoreMLModel(for: MLModel(contentsOf: modelURL))
-        
-        let request = VNCoreMLRequest(model: model, completionHandler: { [weak self] request, error in
-            self?.processDetections(for: request, error: error)
-        })
-        
-        request.imageCropAndScaleOption = .scaleFit
-        
-        return request
-    }()
+    var requests = [VNCoreMLRequest]()
     
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        loadCamera()
+        self.setupRequests()
+        self.loadCamera()
         self.setupLayers()
         self.updateLayerGeometry()
         
@@ -79,6 +70,26 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         detectionOverlay.position = CGPoint(x: bounds.midX, y: bounds.midY)
         
         CATransaction.commit()
+    }
+    
+    private func setupRequests() {
+        // Get model URL
+        guard let modelURL = Bundle.main.url(forResource: "TSRv3copy", withExtension: "mlmodelc") else { return }
+        
+        // Create desired model
+        guard let model = try? VNCoreMLModel(for: MLModel(contentsOf: modelURL)) else { return }
+        
+        for _ in 0 ..< CameraViewController.maxRequests {
+            let request = VNCoreMLRequest(model: model, completionHandler: self.processDetections(for:error:))
+            request.imageCropAndScaleOption = .centerCrop
+            self.requests.append(request)
+        }
+        
+//        let request = VNCoreMLRequest(model: model, completionHandler: { [weak self] request, error in
+//            self?.processDetections(for: request, error: error)
+//        })
+//
+//        request.imageCropAndScaleOption = .scaleFit
     }
     
     func loadCamera() {
@@ -167,9 +178,16 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(ciImage: ciImage, orientation: orientation)
+            let request = self.requests[self.currentRequestIndex]
+            
+            self.currentRequestIndex += 1
+            
+            if self.currentRequestIndex >= CameraViewController.maxRequests {
+                self.currentRequestIndex = 0
+            }
             
             do {
-                try handler.perform([self.detectionRequest])
+                try handler.perform([request])
             } catch {
                 print("Failed to perform detection.\n\(error.localizedDescription)")
             }
@@ -205,10 +223,10 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     func drawBoxes(detections: [VNRecognizedObjectObservation]) {
         for detection in detections {
             for label in detection.labels {
-                if !label.confidence.isLess(than: 0.25) {
+                if !label.confidence.isLess(than: 0.85) {
                     // Uncomment next 2 lines to print output
-                    //                    print(detection.labels.map({"\($0.identifier) confidence: \($0.confidence)"}).joined(separator: "\n"))
-                    //                    print("-------------------")
+                    print("\(label.identifier) confidence: \(label.confidence)")
+                    print("-------------------")
                     
                     let box = BoundingBox()
                     box.addToLayer(self.detectionOverlay)
@@ -221,7 +239,6 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
                     let boxColor = detectionType.getColor()
                     
                     box.show(frame: boundingBox, label: detection.labels.first?.identifier ?? "Object", color: boxColor)
-                    //            box.textLayer.transform = CATransform3DMakeScale(-1, 1, 1)
                     box.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
                 }
             }
