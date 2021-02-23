@@ -18,6 +18,10 @@
 		6147F77925C306660013BDE0 /* BoundingBox.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6147F77825C306660013BDE0 /* BoundingBox.swift */; };
 		6147F77D25C30A040013BDE0 /* ObservationTypesEnum.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6147F77C25C30A040013BDE0 /* ObservationTypesEnum.swift */; };
 		F51D936D25E3E6CB00BD750A /* TSRv3copy.mlmodel in Sources */ = {isa = PBXBuildFile; fileRef = F51D936C25E3E6CB00BD750A /* TSRv3copy.mlmodel */; };
+		F5BB040425E52CA400B4E2EA /* MenuButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040325E52CA400B4E2EA /* MenuButtonView.swift */; };
+		F5BB040825E5351500B4E2EA /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040725E5351500B4E2EA /* MenuView.swift */; };
+		F5BB040B25E535F900B4E2EA /* UIViewExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040A25E535F900B4E2EA /* UIViewExt.swift */; };
+		F5BB040E25E5616700B4E2EA /* BannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040D25E5616700B4E2EA /* BannerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -34,6 +38,10 @@
 		6147F77825C306660013BDE0 /* BoundingBox.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoundingBox.swift; sourceTree = "<group>"; };
 		6147F77C25C30A040013BDE0 /* ObservationTypesEnum.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ObservationTypesEnum.swift; sourceTree = "<group>"; };
 		F51D936C25E3E6CB00BD750A /* TSRv3copy.mlmodel */ = {isa = PBXFileReference; lastKnownFileType = file.mlmodel; path = TSRv3copy.mlmodel; sourceTree = "<group>"; };
+		F5BB040325E52CA400B4E2EA /* MenuButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuButtonView.swift; sourceTree = "<group>"; };
+		F5BB040725E5351500B4E2EA /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
+		F5BB040A25E535F900B4E2EA /* UIViewExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewExt.swift; sourceTree = "<group>"; };
+		F5BB040D25E5616700B4E2EA /* BannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +75,7 @@
 			isa = PBXGroup;
 			children = (
 				6147F76725C305330013BDE0 /* Delegates */,
+				F5BB040225E52C6300B4E2EA /* Views */,
 				6147F76825C3054C0013BDE0 /* Controllers */,
 				6147F77425C306080013BDE0 /* Helpers */,
 				6147F75725C304770013BDE0 /* Assets.xcassets */,
@@ -102,8 +111,19 @@
 				6147F77525C3061F0013BDE0 /* UIImageExt.swift */,
 				6147F77825C306660013BDE0 /* BoundingBox.swift */,
 				6147F77C25C30A040013BDE0 /* ObservationTypesEnum.swift */,
+				F5BB040A25E535F900B4E2EA /* UIViewExt.swift */,
 			);
 			path = Helpers;
+			sourceTree = "<group>";
+		};
+		F5BB040225E52C6300B4E2EA /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				F5BB040325E52CA400B4E2EA /* MenuButtonView.swift */,
+				F5BB040725E5351500B4E2EA /* MenuView.swift */,
+				F5BB040D25E5616700B4E2EA /* BannerView.swift */,
+			);
+			path = Views;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -175,14 +195,18 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F5BB040B25E535F900B4E2EA /* UIViewExt.swift in Sources */,
 				6147F75025C304740013BDE0 /* MenuViewController.swift in Sources */,
 				F51D936D25E3E6CB00BD750A /* TSRv3copy.mlmodel in Sources */,
 				6147F77925C306660013BDE0 /* BoundingBox.swift in Sources */,
+				F5BB040425E52CA400B4E2EA /* MenuButtonView.swift in Sources */,
 				6147F76C25C3058B0013BDE0 /* CameraViewController.swift in Sources */,
 				6147F74C25C304740013BDE0 /* AppDelegate.swift in Sources */,
 				6147F77625C3061F0013BDE0 /* UIImageExt.swift in Sources */,
+				F5BB040825E5351500B4E2EA /* MenuView.swift in Sources */,
 				6147F74E25C304740013BDE0 /* SceneDelegate.swift in Sources */,
 				6147F75625C304740013BDE0 /* Traffic_Signs_Recogniser.xcdatamodeld in Sources */,
+				F5BB040E25E5616700B4E2EA /* BannerView.swift in Sources */,
 				6147F77D25C30A040013BDE0 /* ObservationTypesEnum.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

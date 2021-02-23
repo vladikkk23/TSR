@@ -24,7 +24,7 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     
     var currentRequestIndex = 0
     // How many predictions we can do concurrently.
-    static let maxRequests = 3
+    static let maxRequests = 5
     
     // Initializing request handler
     var requests = [VNCoreMLRequest]()
