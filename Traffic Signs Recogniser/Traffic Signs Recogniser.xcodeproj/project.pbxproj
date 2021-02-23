@@ -22,6 +22,8 @@
 		F5BB040825E5351500B4E2EA /* MenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040725E5351500B4E2EA /* MenuView.swift */; };
 		F5BB040B25E535F900B4E2EA /* UIViewExt.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040A25E535F900B4E2EA /* UIViewExt.swift */; };
 		F5BB040E25E5616700B4E2EA /* BannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB040D25E5616700B4E2EA /* BannerView.swift */; };
+		F5BB041125E595AA00B4E2EA /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB041025E595AA00B4E2EA /* SettingsViewController.swift */; };
+		F5BB041625E598B800B4E2EA /* SettingsButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5BB041525E598B800B4E2EA /* SettingsButtonView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -42,6 +44,8 @@
 		F5BB040725E5351500B4E2EA /* MenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MenuView.swift; sourceTree = "<group>"; };
 		F5BB040A25E535F900B4E2EA /* UIViewExt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UIViewExt.swift; sourceTree = "<group>"; };
 		F5BB040D25E5616700B4E2EA /* BannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BannerView.swift; sourceTree = "<group>"; };
+		F5BB041025E595AA00B4E2EA /* SettingsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
+		F5BB041525E598B800B4E2EA /* SettingsButtonView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsButtonView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -101,6 +105,7 @@
 			children = (
 				6147F74F25C304740013BDE0 /* MenuViewController.swift */,
 				6147F76B25C3058B0013BDE0 /* CameraViewController.swift */,
+				F5BB041025E595AA00B4E2EA /* SettingsViewController.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -119,11 +124,28 @@
 		F5BB040225E52C6300B4E2EA /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				F5BB041425E598A500B4E2EA /* Settings */,
+				F5BB041325E5989B00B4E2EA /* Menu */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		F5BB041325E5989B00B4E2EA /* Menu */ = {
+			isa = PBXGroup;
+			children = (
 				F5BB040325E52CA400B4E2EA /* MenuButtonView.swift */,
 				F5BB040725E5351500B4E2EA /* MenuView.swift */,
 				F5BB040D25E5616700B4E2EA /* BannerView.swift */,
 			);
-			path = Views;
+			path = Menu;
+			sourceTree = "<group>";
+		};
+		F5BB041425E598A500B4E2EA /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				F5BB041525E598B800B4E2EA /* SettingsButtonView.swift */,
+			);
+			path = Settings;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -204,6 +226,8 @@
 				6147F74C25C304740013BDE0 /* AppDelegate.swift in Sources */,
 				6147F77625C3061F0013BDE0 /* UIImageExt.swift in Sources */,
 				F5BB040825E5351500B4E2EA /* MenuView.swift in Sources */,
+				F5BB041125E595AA00B4E2EA /* SettingsViewController.swift in Sources */,
+				F5BB041625E598B800B4E2EA /* SettingsButtonView.swift in Sources */,
 				6147F74E25C304740013BDE0 /* SceneDelegate.swift in Sources */,
 				6147F75625C304740013BDE0 /* Traffic_Signs_Recogniser.xcdatamodeld in Sources */,
 				F5BB040E25E5616700B4E2EA /* BannerView.swift in Sources */,

@@ -32,6 +32,13 @@ class MenuViewController: UIViewController {
     }()
     
     // MARK: - Methods
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.bannerView.removeAnimations()
+        self.bannerView.addAnimations()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.

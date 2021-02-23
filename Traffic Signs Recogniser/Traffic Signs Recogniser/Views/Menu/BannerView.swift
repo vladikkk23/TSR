@@ -74,7 +74,7 @@ class BannerView: UIView {
     
     // MARK: - Methods
     private func setupView() {
-        self.addAnimation()
+        self.addAnimations()
 
         self.addSubview(self.leftImage)
         self.addSubview(self.rightImage)
@@ -146,13 +146,13 @@ class BannerView: UIView {
 //        self.layer.addSublayer(bannerGradientLayer)
 //    }
     
-    private func addAnimation() {
+    func addAnimations() {
         let orbit = CAKeyframeAnimation(keyPath: "position")
         
         var affineTransform = CGAffineTransform(rotationAngle: 0.0)
         affineTransform = affineTransform.rotated(by: CGFloat(Double.pi))
         
-        var circlePath = UIBezierPath(arcCenter: self.center, radius:  CGFloat(0.1), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: true)
+        var circlePath = UIBezierPath(arcCenter: CGPoint(x: 0, y: 0), radius:  CGFloat(0.1), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: true)
         orbit.path = circlePath.cgPath
         orbit.duration = 4
         orbit.isAdditive = true
@@ -162,7 +162,7 @@ class BannerView: UIView {
         
         self.layer.add(orbit, forKey: "orbit")
         
-        circlePath = UIBezierPath(arcCenter: self.center, radius:  CGFloat(0.1), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: false)
+        circlePath = UIBezierPath(arcCenter: CGPoint(x: 0, y: 0), radius:  CGFloat(0.1), startAngle: CGFloat(0), endAngle:CGFloat(Double.pi * 2), clockwise: false)
         orbit.path = circlePath.cgPath
         
         self.leftImage.layer.add(orbit, forKey: "orbit")
@@ -170,6 +170,15 @@ class BannerView: UIView {
         self.centerImage.layer.add(orbit, forKey: "orbit")
         self.topImage.layer.add(orbit, forKey: "orbit")
         self.lowerImage.layer.add(orbit, forKey: "orbit")
+    }
+    
+    func removeAnimations() {
+        self.layer.removeAllAnimations()
+        self.leftImage.layer.removeAllAnimations()
+        self.rightImage.layer.removeAllAnimations()
+        self.centerImage.layer.removeAllAnimations()
+        self.topImage.layer.removeAllAnimations()
+        self.lowerImage.layer.removeAllAnimations()
     }
 }
 

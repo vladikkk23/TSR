@@ -110,9 +110,8 @@ extension MenuView {
     @objc private func openSettings() {
         guard let baseVC = self.findViewController() as? MenuViewController else { return }
         
-        let newVC = UIViewController()
+        let newVC = SettingsViewController()
         newVC.title = "Settings"
-        newVC.view.backgroundColor = .darkGray
         
         DispatchQueue.main.async {
             baseVC.navigationController?.pushViewController(newVC, animated: true)
