@@ -11,6 +11,7 @@ import Vision
 import VideoToolbox
 
 class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
+    // MARK: - Properties
     var bufferSize: CGSize = .zero
     var rootLayer: CALayer! = nil
     
@@ -28,6 +29,19 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     
     // Initializing request handler
     var requests = [VNCoreMLRequest]()
+    
+    // Store last sign
+    private var lastSign: String!
+    
+    // User settings
+    private var playSound: Bool!
+    
+    // MARK: - Methods
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.playSound = UserDefaults.standard.bool(forKey: "warnings")
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -84,12 +98,6 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
             request.imageCropAndScaleOption = .centerCrop
             self.requests.append(request)
         }
-        
-//        let request = VNCoreMLRequest(model: model, completionHandler: { [weak self] request, error in
-//            self?.processDetections(for: request, error: error)
-//        })
-//
-//        request.imageCropAndScaleOption = .scaleFit
     }
     
     func loadCamera() {
@@ -221,25 +229,40 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     }
     
     func drawBoxes(detections: [VNRecognizedObjectObservation]) {
-        for detection in detections {
-            for label in detection.labels {
-                if !label.confidence.isLess(than: 0.85) {
-                    // Uncomment next 2 lines to print output
-                    print("\(label.identifier) confidence: \(label.confidence)")
-                    print("-------------------")
-                    
-                    let box = BoundingBox()
-                    box.addToLayer(self.detectionOverlay)
-                    
-                    // The coordinates are normalized to the dimensions of the processed image, with the origin at the image's lower-left corner.
-                    let boundingBox = VNImageRectForNormalizedRect(detection.boundingBox, Int(self.bufferSize.width), Int(self.bufferSize.height))
-                    
-                    let detectionType = ObservationTypeEnum(fromRawValue: "\(label.identifier)")
-                    
-                    let boxColor = detectionType.getColor()
-                    
-                    box.show(frame: boundingBox, label: detection.labels.first?.identifier ?? "Object", color: boxColor)
-                    box.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
+        if detections.count < 1 {
+            // Remove previous bounding boxes
+            self.detectionOverlay.sublayers = nil
+        } else {
+            for detection in detections {
+                for label in detection.labels {
+                    if !label.confidence.isLess(than: 0.85) {
+                        
+                        // Don't notify user about signs that repeat
+                        if self.lastSign != label.identifier {
+                            self.lastSign = label.identifier
+                            
+                            if self.playSound {
+                                AudioServicesPlayAlertSound(SystemSoundID(1322))
+                            }
+                        }
+                        
+                        // Uncomment next 2 lines to print output
+//                        print("\(label.identifier) confidence: \(label.confidence)")
+//                        print("-------------------")
+                        
+                        let box = BoundingBox()
+                        box.addToLayer(self.detectionOverlay)
+                        
+                        // The coordinates are normalized to the dimensions of the processed image, with the origin at the image's lower-left corner.
+                        let boundingBox = VNImageRectForNormalizedRect(detection.boundingBox, Int(self.bufferSize.width), Int(self.bufferSize.height))
+                        
+                        let detectionType = ObservationTypeEnum(fromRawValue: "\(label.identifier)")
+                        
+                        let boxColor = detectionType.getColor()
+                        
+                        box.show(frame: boundingBox, label: detection.labels.first?.identifier ?? "Object", color: boxColor)
+                        box.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
+                    }
                 }
             }
         }

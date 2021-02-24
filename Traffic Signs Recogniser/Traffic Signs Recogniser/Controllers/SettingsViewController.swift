@@ -18,6 +18,7 @@ class SettingsViewController: UIViewController {
         view.backgroundColor = .white
         view.layer.cornerRadius = 15
         view.layer.masksToBounds = true
+        view.title = "notifications"
         return view
     }()
     
@@ -30,6 +31,7 @@ class SettingsViewController: UIViewController {
         view.backgroundColor = .white
         view.layer.cornerRadius = 15
         view.layer.masksToBounds = true
+        view.title = "warnings"
         return view
     }()
     
@@ -42,10 +44,17 @@ class SettingsViewController: UIViewController {
         view.backgroundColor = .white
         view.layer.cornerRadius = 15
         view.layer.masksToBounds = true
+        view.title = "restore"
         return view
     }()
     
     // MARK: - Methods
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        self.getUserSettings()
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
@@ -63,6 +72,18 @@ class SettingsViewController: UIViewController {
         
         // Setup layout constraints
         self.setupLayout()
+    }
+    
+    private func getUserSettings() {
+        let defaults = UserDefaults.standard
+
+        let notifications = defaults.bool(forKey: self.notificationsButton.title)
+        let warnings = defaults.bool(forKey: self.warningsButton.title)
+        let def = defaults.bool(forKey: self.restoreDefaultsButton.title)
+        
+        self.notificationsButton.statusSwitch.isOn = notifications
+        self.warningsButton.statusSwitch.isOn = warnings
+        self.restoreDefaultsButton.statusSwitch.isOn = def
     }
     
     private func setupLayout() {

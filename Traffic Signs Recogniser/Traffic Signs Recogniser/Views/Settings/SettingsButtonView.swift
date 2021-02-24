@@ -13,6 +13,7 @@ class SettingsButtonView: UIView {
         let btn = UIButton(frame: .zero)
         btn.translatesAutoresizingMaskIntoConstraints = false
         btn.backgroundColor = .clear
+        btn.addTarget(self, action: #selector(self.onTap), for: .touchUpInside)
         return btn
     }()
     
@@ -33,6 +34,9 @@ class SettingsButtonView: UIView {
         return btn
     }()
     
+    var title: String!
+    var status: Bool!
+    
     // MARK: - Initializers
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -49,9 +53,9 @@ class SettingsButtonView: UIView {
     
     // MARK: - Methods
     private func setupView() {
-        self.addSubview(self.button)
         self.addSubview(self.titleLabel)
         self.addSubview(self.statusSwitch)
+        self.addSubview(self.button)
         
         self.setupLayout()
     }
@@ -87,5 +91,16 @@ class SettingsButtonView: UIView {
             self.statusSwitch.heightAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.8),
             self.statusSwitch.widthAnchor.constraint(equalTo: self.heightAnchor, multiplier: 0.8)
         ])
+    }
+}
+
+// MARK: - Actions
+extension SettingsButtonView {
+    @objc func onTap() {
+        self.status = self.statusSwitch.isOn
+        self.status.toggle()
+        self.statusSwitch.isOn = self.status
+        
+        UserDefaults.standard.setValue(status, forKey: self.title)
     }
 }
