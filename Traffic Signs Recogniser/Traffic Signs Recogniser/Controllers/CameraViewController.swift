@@ -24,11 +24,17 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     private var previewLayer: AVCaptureVideoPreviewLayer! = nil
     
     var currentRequestIndex = 0
-    // How many predictions we can do concurrently.
-    static let maxRequests = 5
+    
+    // Max detections at same time
+    static let maxDetections = 3
+    
+    var boundingBoxes: [BoundingBox]!
     
     // Initializing request handler
-    var requests = [VNCoreMLRequest]()
+    var request: VNCoreMLRequest!
+    
+    // Store all detections for current request
+    var detections: [VNRecognizedObjectObservation]!
     
     // Store last sign
     private var lastSign: String!
@@ -40,6 +46,7 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        // Set sign notification sound
         self.playSound = UserDefaults.standard.bool(forKey: "warnings")
     }
     
@@ -47,19 +54,21 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         super.viewDidLoad()
         
         self.setupRequests()
-        self.loadCamera()
+        self.setupCamra()
         self.setupLayers()
         self.updateLayerGeometry()
+        
+        self.setupBoundingBoxes()
         
         self.session.startRunning()
     }
     
     func setupLayers() {
-        detectionOverlay = CALayer()
-        detectionOverlay.name = "DetectionOverlay"
-        detectionOverlay.bounds = CGRect(x: 0.0, y: 0.0, width: bufferSize.width, height: bufferSize.height)
-        detectionOverlay.position = CGPoint(x: rootLayer.bounds.midX, y: rootLayer.bounds.midY)
-        rootLayer.addSublayer(detectionOverlay)
+        self.detectionOverlay = CALayer()
+        self.detectionOverlay.name = "DetectionOverlay"
+        self.detectionOverlay.bounds = CGRect(x: 0.0, y: 0.0, width: bufferSize.width, height: bufferSize.height)
+        self.detectionOverlay.position = CGPoint(x: rootLayer.bounds.midX, y: rootLayer.bounds.midY)
+        self.rootLayer.addSublayer(detectionOverlay)
     }
     
     func updateLayerGeometry() {
@@ -93,14 +102,22 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         // Create desired model
         guard let model = try? VNCoreMLModel(for: MLModel(contentsOf: modelURL)) else { return }
         
-        for _ in 0 ..< CameraViewController.maxRequests {
-            let request = VNCoreMLRequest(model: model, completionHandler: self.processDetections(for:error:))
-            request.imageCropAndScaleOption = .centerCrop
-            self.requests.append(request)
+        self.request = VNCoreMLRequest(model: model, completionHandler: self.processDetections(for:error:))
+        self.request.imageCropAndScaleOption = .centerCrop
+    }
+    
+    func setupBoundingBoxes() {
+        self.boundingBoxes = [BoundingBox]()
+        
+        for _ in 0 ..< CameraViewController.maxDetections {
+            let boundingBox = BoundingBox()
+            boundingBox.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
+            
+            self.boundingBoxes.append(boundingBox)
         }
     }
     
-    func loadCamera() {
+    func setupCamra() {
         guard let videoDevice = AVCaptureDevice.DiscoverySession(deviceTypes: [.builtInWideAngleCamera], mediaType: .video, position: .back).devices.first else { return }
         
         guard let videoDeviceInput = try? AVCaptureDeviceInput(device: videoDevice) else {
@@ -123,12 +140,12 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         if session.canAddOutput(self.videoDataOutput) {
             // Add a video data output
             self.session.addOutput(videoDataOutput)
-            videoDataOutput.alwaysDiscardsLateVideoFrames = true
-            videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
-            videoDataOutput.setSampleBufferDelegate(self, queue: self.videoOutputQueue)
+            self.videoDataOutput.alwaysDiscardsLateVideoFrames = true
+            self.videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: Int(kCVPixelFormatType_420YpCbCr8BiPlanarFullRange)]
+            self.videoDataOutput.setSampleBufferDelegate(self, queue: self.videoOutputQueue)
         } else {
             NSLog("Could not add video data output to the session")
-            session.commitConfiguration()
+            self.session.commitConfiguration()
             return
         }
         
@@ -151,13 +168,13 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         }
         
         // Save session config
-        session.commitConfiguration()
+        self.session.commitConfiguration()
         
-        previewLayer = AVCaptureVideoPreviewLayer(session: session)
-        previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
-        rootLayer = view.layer
-        previewLayer.frame = rootLayer.bounds
-        rootLayer.addSublayer(previewLayer)
+        self.previewLayer = AVCaptureVideoPreviewLayer(session: session)
+        self.previewLayer.videoGravity = AVLayerVideoGravity.resizeAspectFill
+        self.rootLayer = view.layer
+        self.previewLayer.frame = rootLayer.bounds
+        self.rootLayer.addSublayer(previewLayer)
     }
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -186,16 +203,9 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         
         DispatchQueue.global(qos: .userInitiated).async {
             let handler = VNImageRequestHandler(ciImage: ciImage, orientation: orientation)
-            let request = self.requests[self.currentRequestIndex]
-            
-            self.currentRequestIndex += 1
-            
-            if self.currentRequestIndex >= CameraViewController.maxRequests {
-                self.currentRequestIndex = 0
-            }
             
             do {
-                try handler.perform([request])
+                try handler.perform([self.request])
             } catch {
                 print("Failed to perform detection.\n\(error.localizedDescription)")
             }
@@ -223,8 +233,11 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
             }
             
             // Parse result, to get detections
-            let detections = results as! [VNRecognizedObjectObservation]
-            self.drawBoxes(detections: detections)
+            if let detections = results as? [VNRecognizedObjectObservation] {
+                self.drawBoxes(detections: detections)
+            } else {
+                print("Unable to detect anything.\nNo Errors")
+            }
         }
     }
     
@@ -233,36 +246,48 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
             // Remove previous bounding boxes
             self.detectionOverlay.sublayers = nil
         } else {
+            self.detections = detections
+            
+            var goodDetections = [VNRecognizedObjectObservation]()
+            
+            // Select best detections
             for detection in detections {
                 for label in detection.labels {
                     if !label.confidence.isLess(than: 0.85) {
-                        
-                        // Don't notify user about signs that repeat
-                        if self.lastSign != label.identifier {
-                            self.lastSign = label.identifier
-                            
-                            if self.playSound {
-                                AudioServicesPlayAlertSound(SystemSoundID(1322))
-                            }
-                        }
-                        
-                        // Uncomment next 2 lines to print output
-//                        print("\(label.identifier) confidence: \(label.confidence)")
-//                        print("-------------------")
-                        
-                        let box = BoundingBox()
-                        box.addToLayer(self.detectionOverlay)
-                        
-                        // The coordinates are normalized to the dimensions of the processed image, with the origin at the image's lower-left corner.
-                        let boundingBox = VNImageRectForNormalizedRect(detection.boundingBox, Int(self.bufferSize.width), Int(self.bufferSize.height))
-                        
-                        let detectionType = ObservationTypeEnum(fromRawValue: "\(label.identifier)")
-                        
-                        let boxColor = detectionType.getColor()
-                        
-                        box.show(frame: boundingBox, label: detection.labels.first?.identifier ?? "Object", color: boxColor)
-                        box.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
+                        goodDetections.append(detection)
                     }
+                }
+            }
+            
+            // Show bounding boxes
+            for index in 0 ..< boundingBoxes.count {
+                if index < goodDetections.count {
+                    // Don't notify user about signs that repeat
+                    if self.lastSign != goodDetections[index].labels.first!.identifier {
+                        self.lastSign = goodDetections[index].labels.first!.identifier
+                        
+                        if self.playSound {
+                            AudioServicesPlayAlertSound(SystemSoundID(1322))
+                        }
+                    }
+                    
+                    // The coordinates are normalized to the dimensions of the processed image, with the origin at the image's lower-left corner.
+                    let boundingBox = VNImageRectForNormalizedRect(goodDetections[index].boundingBox, Int(self.bufferSize.width), Int(self.bufferSize.height))
+                    
+                    let detectionType = ObservationTypeEnum(fromRawValue: "\(goodDetections[index].labels.first!.identifier)")
+                    
+                    let boxColor = detectionType.getColor()
+                    
+                    self.boundingBoxes[index].show(frame: boundingBox, label: goodDetections[index].labels.first!.identifier, color: boxColor)
+                    
+                    // Add the bounding boxes to detection layer
+                    self.boundingBoxes[index].addToLayer(self.detectionOverlay)
+                    
+                    // Uncomment next 2 lines to print detections output
+                    // print("\(goodDetections[index].labels.first!.identifier) confidence: \(goodDetections[index].labels.first!.confidence)")
+                    // print("-------------------")
+                } else {
+                    self.boundingBoxes[index].hide()
                 }
             }
         }
