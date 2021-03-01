@@ -15,23 +15,24 @@ class BoundingBox {
         shapeLayer = CAShapeLayer()
         shapeLayer.fillColor = UIColor.clear.cgColor
         shapeLayer.lineWidth = 20
-        shapeLayer.isHidden = true
+        shapeLayer.isHidden = false
         
         textLayer = CATextLayer()
-        textLayer.isHidden = true
+        textLayer.isHidden = false
         textLayer.alignmentMode = CATextLayerAlignmentMode.left
     }
     
     func addToLayer(_ parent: CALayer) {
-        parent.sublayers = nil
+//        parent.sublayers = nil
         
         parent.addSublayer(shapeLayer)
         shapeLayer.addSublayer(textLayer)
     }
     
     func show(frame: CGRect, label: String, color: CGColor) {
-        CATransaction.setDisableActions(true)
-        
+        CATransaction.begin()
+        CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
+
         
         let path = UIBezierPath(rect: frame)
         shapeLayer.path = path.cgPath
@@ -59,6 +60,8 @@ class BoundingBox {
         let textOrigin = CGPoint(x: frame.origin.x - 10, y: frame.origin.y - textSize.height)
         
         textLayer.frame = CGRect(origin: textOrigin, size: textSize)
+        
+        CATransaction.commit()
     }
     
     func hide() {

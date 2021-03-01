@@ -37,7 +37,7 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     var detections: [VNRecognizedObjectObservation]!
     
     // Store last sign
-    private var lastSign: String!
+    private var lastSigns: [String]!
     
     // User settings
     private var playSound: Bool!
@@ -59,6 +59,7 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         self.updateLayerGeometry()
         
         self.setupBoundingBoxes()
+        self.setupLastSigns()
         
         self.session.startRunning()
     }
@@ -108,12 +109,32 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     
     func setupBoundingBoxes() {
         self.boundingBoxes = [BoundingBox]()
-        
+
         for _ in 0 ..< CameraViewController.maxDetections {
             let boundingBox = BoundingBox()
             boundingBox.textLayer.transform = CATransform3DScale(CATransform3DMakeRotation(0, 0, 0, 0), 1, -1, 1)
             
             self.boundingBoxes.append(boundingBox)
+        }
+//
+//        let frame1 = CGRect(x: 300, y: 200, width: 150, height: 300)
+//        let frame2 = CGRect(x: 500, y: 200, width: 150, height: 300)
+//        let frame3 = CGRect(x: 700, y: 200, width: 150, height: 300)
+//
+//
+//        self.boundingBoxes[0].show(frame: frame1, label: "Label_1", color: UIColor.systemBlue.cgColor)
+//        self.boundingBoxes[1].show(frame: frame2, label: "Label_2", color: UIColor.systemYellow.cgColor)
+//        self.boundingBoxes[2].show(frame: frame3, label: "Label_3", color: UIColor.systemGreen.cgColor)
+//        self.boundingBoxes[0].addToLayer(self.detectionOverlay)
+//        self.boundingBoxes[1].addToLayer(self.detectionOverlay)
+//        self.boundingBoxes[2].addToLayer(self.detectionOverlay)
+    }
+    
+    func setupLastSigns() {
+        self.lastSigns = [String]()
+        
+        for _ in 0 ..< CameraViewController.maxDetections {
+            self.lastSigns.append("")
         }
     }
     
@@ -219,6 +240,11 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
                     print("Unable to detect anything.\n\(error!.localizedDescription)")
                 } else {
                     print("Unable to detect anything.\nNo Errors")
+                    
+                    // Remove last signs
+                    for index in 0 ..< CameraViewController.maxDetections {
+                        self.lastSigns[index] = ""
+                    }
                 }
                 
                 CATransaction.begin()
@@ -245,6 +271,11 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         if detections.count < 1 {
             // Remove previous bounding boxes
             self.detectionOverlay.sublayers = nil
+            
+            // Remove last signs
+            for index in 0 ..< CameraViewController.maxDetections {
+                self.lastSigns[index] = ""
+            }
         } else {
             self.detections = detections
             
@@ -263,8 +294,8 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
             for index in 0 ..< boundingBoxes.count {
                 if index < goodDetections.count {
                     // Don't notify user about signs that repeat
-                    if self.lastSign != goodDetections[index].labels.first!.identifier {
-                        self.lastSign = goodDetections[index].labels.first!.identifier
+                    if !self.lastSigns.contains(goodDetections[index].labels.first!.identifier) {
+                        self.lastSigns[index] = goodDetections[index].labels.first!.identifier
                         
                         if self.playSound {
                             AudioServicesPlayAlertSound(SystemSoundID(1322))
@@ -284,9 +315,10 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
                     self.boundingBoxes[index].addToLayer(self.detectionOverlay)
                     
                     // Uncomment next 2 lines to print detections output
-                    // print("\(goodDetections[index].labels.first!.identifier) confidence: \(goodDetections[index].labels.first!.confidence)")
-                    // print("-------------------")
+                     print("\(goodDetections[index].labels.first!.identifier) confidence: \(goodDetections[index].labels.first!.confidence)")
+                     print("-------------------")
                 } else {
+                    // Hide bounding boxes if no detections are spotted
                     self.boundingBoxes[index].hide()
                 }
             }
