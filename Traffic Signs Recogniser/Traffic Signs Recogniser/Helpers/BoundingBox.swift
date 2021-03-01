@@ -14,17 +14,15 @@ class BoundingBox {
     init() {
         shapeLayer = CAShapeLayer()
         shapeLayer.fillColor = UIColor.clear.cgColor
-        shapeLayer.lineWidth = 20
-        shapeLayer.isHidden = false
+        shapeLayer.lineWidth = 10
+        shapeLayer.isHidden = true
         
         textLayer = CATextLayer()
-        textLayer.isHidden = false
+        textLayer.isHidden = true
         textLayer.alignmentMode = CATextLayerAlignmentMode.left
     }
     
-    func addToLayer(_ parent: CALayer) {
-//        parent.sublayers = nil
-        
+    func addToLayer(_ parent: CALayer) {        
         parent.addSublayer(shapeLayer)
         shapeLayer.addSublayer(textLayer)
     }
@@ -32,32 +30,25 @@ class BoundingBox {
     func show(frame: CGRect, label: String, color: CGColor) {
         CATransaction.begin()
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
-
         
         let path = UIBezierPath(rect: frame)
         shapeLayer.path = path.cgPath
         shapeLayer.strokeColor = color
         shapeLayer.isHidden = false
-        shapeLayer.cornerRadius = 20
+        shapeLayer.lineCap = .round
         
-        textLayer.string = "   \(label)   "
-        textLayer.cornerRadius = 10
+        let attributedString = NSAttributedString(string: "  \(label)", attributes: [NSAttributedString.Key.font: UIFont(name: "Times New Roman Bold", size: 40)!, NSAttributedString.Key.foregroundColor: UIColor.white.cgColor, NSAttributedString.Key.strokeColor: UIColor.black])
+        
+        textLayer.string = attributedString
         textLayer.backgroundColor = color
         textLayer.isHidden = false
-        textLayer.masksToBounds = true
         textLayer.contentsScale = UIScreen.main.scale
-        textLayer.contentsGravity = .resizeAspect
+        textLayer.contentsGravity = .left
         
-        let attributes = [
-            NSAttributedString.Key.font: UIFont(name: "Times New Roman Bold", size: 40)!,
-            NSAttributedString.Key.foregroundColor: UIColor.white,
-            NSAttributedString.Key.strokeColor: UIColor.black
-        ]
+        let textRect = CGRect(x: 0, y: 0, width: 100, height: 50)
         
-        let textRect = label.boundingRect(with: CGSize(width: 800, height: 200), options: [.truncatesLastVisibleLine], attributes: attributes, context: nil)
-        
-        let textSize = CGSize(width: frame.width + 20, height: textRect.height)
-        let textOrigin = CGPoint(x: frame.origin.x - 10, y: frame.origin.y - textSize.height)
+        let textSize = CGSize(width: frame.width + 10, height: textRect.height)
+        let textOrigin = CGPoint(x: frame.origin.x - 5, y: frame.origin.y)
         
         textLayer.frame = CGRect(origin: textOrigin, size: textSize)
         

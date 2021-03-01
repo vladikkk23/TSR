@@ -22,9 +22,7 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     private let videoOutputQueue = DispatchQueue(label: "Video_Output")
     
     private var previewLayer: AVCaptureVideoPreviewLayer! = nil
-    
-    var currentRequestIndex = 0
-    
+        
     // Max detections at same time
     static let maxDetections = 3
     
@@ -46,6 +44,9 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         
+        // Start camera
+        self.session.startRunning()
+        
         // Set sign notification sound
         self.playSound = UserDefaults.standard.bool(forKey: "warnings")
     }
@@ -60,24 +61,29 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         
         self.setupBoundingBoxes()
         self.setupLastSigns()
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
         
-        self.session.startRunning()
+        // Stop camera
+        self.session.stopRunning()
     }
     
     func setupLayers() {
         self.detectionOverlay = CALayer()
         self.detectionOverlay.name = "DetectionOverlay"
-        self.detectionOverlay.bounds = CGRect(x: 0.0, y: 0.0, width: bufferSize.width, height: bufferSize.height)
-        self.detectionOverlay.position = CGPoint(x: rootLayer.bounds.midX, y: rootLayer.bounds.midY)
-        self.rootLayer.addSublayer(detectionOverlay)
+        self.detectionOverlay.bounds = CGRect(x: 0.0, y: 0.0, width: self.bufferSize.width, height: self.bufferSize.height)
+        self.detectionOverlay.position = CGPoint(x: self.rootLayer.bounds.midX, y: self.rootLayer.bounds.midY)
+        self.rootLayer.addSublayer(self.detectionOverlay)
     }
     
     func updateLayerGeometry() {
-        let bounds = rootLayer.bounds
+        let bounds = self.rootLayer.bounds
         var scale: CGFloat
         
-        let xScale: CGFloat = bounds.size.width / bufferSize.height
-        let yScale: CGFloat = bounds.size.height / bufferSize.width
+        let xScale: CGFloat = bounds.size.width / self.bufferSize.height
+        let yScale: CGFloat = bounds.size.height / self.bufferSize.width
         
         scale = fmax(xScale, yScale)
         if scale.isInfinite {
@@ -88,10 +94,10 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
         CATransaction.setValue(kCFBooleanTrue, forKey: kCATransactionDisableActions)
         
         // Rotate the layer into screen orientation and scale and mirror
-        detectionOverlay.setAffineTransform(CGAffineTransform(rotationAngle: CGFloat(.pi / 2.0)).scaledBy(x: scale, y: -scale))
+        self.detectionOverlay.setAffineTransform(CGAffineTransform(rotationAngle: CGFloat(.pi / 2.0)).scaledBy(x: scale, y: -scale))
         
         // Center the layer
-        detectionOverlay.position = CGPoint(x: bounds.midX, y: bounds.midY)
+        self.detectionOverlay.position = CGPoint(x: bounds.midX, y: bounds.midY)
         
         CATransaction.commit()
     }
@@ -116,18 +122,6 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
             
             self.boundingBoxes.append(boundingBox)
         }
-//
-//        let frame1 = CGRect(x: 300, y: 200, width: 150, height: 300)
-//        let frame2 = CGRect(x: 500, y: 200, width: 150, height: 300)
-//        let frame3 = CGRect(x: 700, y: 200, width: 150, height: 300)
-//
-//
-//        self.boundingBoxes[0].show(frame: frame1, label: "Label_1", color: UIColor.systemBlue.cgColor)
-//        self.boundingBoxes[1].show(frame: frame2, label: "Label_2", color: UIColor.systemYellow.cgColor)
-//        self.boundingBoxes[2].show(frame: frame3, label: "Label_3", color: UIColor.systemGreen.cgColor)
-//        self.boundingBoxes[0].addToLayer(self.detectionOverlay)
-//        self.boundingBoxes[1].addToLayer(self.detectionOverlay)
-//        self.boundingBoxes[2].addToLayer(self.detectionOverlay)
     }
     
     func setupLastSigns() {
@@ -269,13 +263,10 @@ class CameraViewController : UIViewController, AVCaptureVideoDataOutputSampleBuf
     
     func drawBoxes(detections: [VNRecognizedObjectObservation]) {
         if detections.count < 1 {
+            /** MARK: - Make only UI updates here */
+            
             // Remove previous bounding boxes
             self.detectionOverlay.sublayers = nil
-            
-            // Remove last signs
-            for index in 0 ..< CameraViewController.maxDetections {
-                self.lastSigns[index] = ""
-            }
         } else {
             self.detections = detections
             
